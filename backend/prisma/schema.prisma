@@ -1,0 +1,107 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String    @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  email      String    @unique
+  password   String
+  name       String    @default("Username")
+  avatarPath String    @default("/uploads/default.png") @map("avatar_path")
+  role       UserRole  @default(USER)
+  isPremium  Boolean   @default(false) @map("is_premium")
+  favorites  Movie[]
+  Reviews    Review[]
+  Payments   Payment[]
+}
+
+model Movie {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  title       String   @unique
+  slug        String   @unique
+  poster      String
+  bigPoster   String   @map("big_poster")
+  year        Int      @default(0)
+  duration    Int      @default(0)
+  country     String   @default("Default")
+  views       Int      @default(0)
+  video       String   @map("video")
+  description String
+  director    String
+  rating      Int      @default(0)
+  User        User?    @relation(fields: [userId], references: [id])
+  userId      String?  @db.ObjectId
+  Genre       Genre?   @relation(fields: [genreId], references: [id])
+  genreId     String?  @db.ObjectId
+  Actor       Actor?   @relation(fields: [actorId], references: [id])
+  actorId     String?  @db.ObjectId
+  Reviews     Review[]
+}
+
+model Genre {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  name        String   @unique
+  slug        String   @unique
+  description String
+  movies      Movie[]
+}
+
+model Actor {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  name        String   @unique
+  slug        String   @unique
+  photo       String   @map("photo")
+  description String
+  movies      Movie[]
+}
+
+model Review {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  text      String
+  rating    Int
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String   @map("user_id") @db.ObjectId
+  movie     Movie    @relation(fields: [movieId], references: [id])
+  movieId   String   @map("movie_id") @db.ObjectId
+}
+
+model Payment {
+  id        String        @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt DateTime      @default(now()) @map("created_at")
+  updatedAt DateTime      @updatedAt @map("updated_at")
+  status    PaymentStatus @default(PENDING)
+  amount    Float         @default(0)
+  user      User          @relation(fields: [userId], references: [id])
+  userId    String        @map("user_id") @db.ObjectId
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum PaymentStatus {
+  PAID
+  PENDING
+}
